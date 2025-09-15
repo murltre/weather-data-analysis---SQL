@@ -1,0 +1,111 @@
+
+
+/* Check for total rows */
+SELECT COUNT(*) as total_days FROM daily_weather;
+
+/*Showing unique rows */
+SELECT COUNT(DISTINCT date) as unique_days FROM daily_weather;
+
+/* because unique rows and total rows are not the same, there are duplicate dates */
+/*Checking the duplicates rows */
+
+SELECT * FROM daily_weather
+WHERE date IN (
+	SELECT date FROM daily_weather
+	GROUP BY date
+	HAVING COUNT(*) > 1
+)
+ORDER BY date;
+
+/* Question 2: What was the highest temperature recorded, and on what date did it occur? */
+
+SELECT dw.date, dw.tmax_f 
+FROM daily_weather dw
+ORDER BY tmax_f DESC
+LIMIT 10;
+
+
+/* Alternative query */
+
+SELECT date, tmax_f FROM daily_weather
+WHERE tmax_f = (SELECT MAX(tmax_f) FROM daily_weather);
+
+/* Question 3: What was the lowest temperature recorded, and on what date did it occur? */
+
+SELECT dw.date, dw.tmin_f
+FROM daily_weather dw
+ORDER BY tmin_f ASC
+LIMIT 8;
+
+/*Alternative Query */
+SELECT date, tmin_f
+FROM daily_weather WHERE tmin_f = (SELECT MIN(tmin_f) FROM daily_weather);
+
+ 
+/* Question 4: How many days each year had “extreme heat” (temperature > 90°F)? */
+SELECT strftime('%Y', date) AS year, COUNT(*) AS N_Hot_days
+FROM daily_weather
+WHERE tmax_f > 90
+GROUP BY year
+ORDER BY CAST(year AS INT)
+
+
+/* Question 5: How many days each year had “extreme cold” (temperature < 32°F)? */
+
+SELECT year, COUNT(*) AS COLD_DAYS
+FROM daily_weather
+WHERE tmin_f < 32
+GROUP BY year;
+
+/* Question 6: What is the average wind speed for each year? */
+
+SELECT year, round(avg(wspd_mph), 0) AS AV_Wind_SPD
+FROM daily_weather
+GROUP BY year;
+
+/* Question 7: On how many days did wind speeds exceed 20 mph? */
+
+SELECT COUNT(*) AS N_Ex20
+FROM daily_weather
+WHERE wspd_mph > 20
+
+/* What's if we want to find them per year?! */
+SELECT year, COUNT(*) AS N_W_Ex20
+FROM daily_weather
+WHERE wspd_mph > 20
+GROUP BY year
+ORDER BY CAST( year AS INT);
+
+
+/* 8- *How many “extreme weather days” (temp > 90°F, temp < 32°F, OR wind > 20 mph) occurred each year */
+
+SELECT year, COUNT(*) AS Ex_Weather_days
+FROM daily_weather
+WHERE tmax_f > 90 OR tmin_f < 32 OR wspd_mph > 20
+GROUP BY year
+ORDER BY CAST(year AS INT);
+
+
+/* What if we want to get just the total across the years?! */
+SELECT COUNT(*) AS EX_weather_days
+FROM daily_weather
+WHERE (tmax_f > 90 OR tmin_f <32 OR wspd_mph > 20);
+
+/* 9- Which month had the highest number of extreme weather days across the dataset? */
+SELECT strftime('%m', date) AS month, COUNT(*) AS EX_Weather
+FROM daily_weather
+WHERE (tmax_f > 90 OR tmin_f < 32 OR wspd_mph > 20)
+GROUP BY month
+ORDER BY Ex_Weather DESC
+LIMIT 5;
+
+
+/* 10- What percentage of all recorded days were extreme weather days? */
+
+SELECT COUNT(*) FROM daily_weather AS Total_Records;
+
+SELECT COUNT(*) FROM daily_weather AS Ext_Weather
+WHERE (tmax_f >90 OR tmin_f <32 OR wspd_mph > 20);
+
+SELECT ROUND(100.0 * 265.0/370.0, 1) || '%' AS pct_extreme_days;
+
